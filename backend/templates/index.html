@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TicTacToe</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <script type="module" src="{{ url_for('static', filename='app.js') }}"></script>
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero">
+        <p class="eyebrow">Python backend, JavaScript frontend</p>
+        <h1>TicTacToe</h1>
+        <p class="lede">
+          Play in the browser against a Python bot that uses minimax.
+        </p>
+
+        <div class="status-card">
+          <div class="status-line">
+            <span id="status">Loading...</span>
+          </div>
+          <button id="reset-button" class="secondary-button" type="button">New game</button>
+        </div>
+
+        <section class="board-wrap" aria-label="TicTacToe board">
+          <div id="board" class="board" role="grid" aria-label="TicTacToe grid"></div>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>
