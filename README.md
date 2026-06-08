@@ -1,6 +1,6 @@
 # Backend Counter Demo
 
-This is a tiny example of a button talking to a Python backend.
+This is a tiny example of buttons talking to a Python backend.
 
 ## How it works
 
@@ -38,4 +38,4 @@ This is a tiny example of a button talking to a Python backend.
 6. Leave that terminal open while the backend is running.
 7. Open `Client/index.html` in your browser.
 
-Clicking the button sends a request to Python, Python increments the counter, and the label updates with the new value.
+Clicking `+` sends `{"delta": 1}` and clicking `-` sends `{"delta": -1}`. Python updates the count and the label changes.
