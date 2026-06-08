@@ -1,6 +1,6 @@
-import { Grid } from './grid.js'
+import { CounterView } from './grid.js'
 
 const appElement = document.querySelector('#app')
-const grid = new Grid(appElement)
+const counterView = new CounterView(appElement)
 
-grid.render()
+counterView.render()
