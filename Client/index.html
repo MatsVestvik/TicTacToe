@@ -6,7 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- The page title shown in the browser tab. -->
     <title>Counter</title>
-    <!-- When deploying, you can define window.API_BASE_URL before main.js loads. -->
+    <!-- Expose the deployed backend URL to the frontend. Update if you redeploy. -->
+    <script>
+      window.API_BASE_URL = 'https://tic-tac-toe-backend-flax.vercel.app'
+    </script>
     <!-- Load the JavaScript that builds the counter UI. -->
     <script type="module" src="main.js"></script>
   </head>
