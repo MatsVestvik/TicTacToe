@@ -9,8 +9,32 @@ This is a tiny example of a frontend button talking to a Python backend.
 
 ## Run
 
-1. Install Python dependencies: `pip install -r backend/requirements.txt`
-2. Start the backend: `python backend/app.py`
-3. Open `Client/index.html` in a browser
+1. Open PowerShell.
+2. Go to the project folder:
+
+	```powershell
+	Set-Location C:\Users\mats\Desktop\projects\TicTacToe
+	```
+
+3. Activate the virtual environment:
+
+	```powershell
+	.\.venv\Scripts\Activate.ps1
+	```
+
+4. Install the Python dependencies:
+
+	```powershell
+	python -m pip install -r backend\requirements.txt
+	```
+
+5. Start the backend:
+
+	```powershell
+	python backend\app.py
+	```
+
+6. Leave that terminal open while the backend is running.
+7. Open `Client/index.html` in your browser.
 
 Clicking the button sends a request to Python, Python increments the counter, and the label updates with the new value.
