@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 
 
 app = Flask(__name__)
@@ -23,11 +23,6 @@ def increment_counter():
     global count
     count += 1
     return jsonify(count=count, message='Counter incremented in Python')
-
-
-@app.options('/api/counter/increment')
-def increment_counter_options():
-    return ('', 204)
 
 
 if __name__ == '__main__':
