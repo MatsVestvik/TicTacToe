@@ -23,24 +23,29 @@ async function loadCount() {
 	countElement.textContent = String(data.count)
 }
 
-// Tell Flask to change the count by the given amount.
-async function changeCount(delta) {
-	const response = await fetch('http://127.0.0.1:5000/api/counter', {
+// Tell Flask to increase the count by 1.
+async function increaseCount() {
+	const response = await fetch('http://127.0.0.1:5000/api/counter/increase', {
 		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({ delta }),
+	})
+	const data = await response.json()
+	countElement.textContent = String(data.count)
+}
+
+// Tell Flask to decrease the count by 1.
+async function decreaseCount() {
+	const response = await fetch('http://127.0.0.1:5000/api/counter/decrease', {
+		method: 'POST',
 	})
 	const data = await response.json()
 	countElement.textContent = String(data.count)
 }
 
 // Run the decrease code when the minus button is clicked.
-decreaseButton.addEventListener('click', () => changeCount(-1))
+decreaseButton.addEventListener('click', decreaseCount)
 
 // Run the increase code when the plus button is clicked.
-increaseButton.addEventListener('click', () => changeCount(1))
+increaseButton.addEventListener('click', increaseCount)
 
 // Load the starting value when the page opens.
 loadCount()

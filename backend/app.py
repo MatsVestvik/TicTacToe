@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 
 
 # Import the Flask tools we need:
@@ -22,37 +22,33 @@ def add_cors_headers(response):
     return response
 
 
-@app.route('/api/counter', methods=['GET', 'POST'])
+@app.route('/api/counter', methods=['GET'])
 def counter():
+    # GET means "read the current value".
+    # jsonify(count=count) makes this response look like:
+    # { "count": 0 }
+    return jsonify(count=count)
+
+
+
+@app.route('/api/counter/increase', methods=['POST'])
+def increase_counter():
     # We are going to update the global counter variable,
     # so Python needs to know we mean the outer variable.
     global count
 
-    # GET means "read the current value".
-    if request.method == 'GET':
-        # jsonify(count=count) makes this response look like:
-        # { "count": 0 }
-        return jsonify(count=count)
+    count += 1
+    return jsonify(count=count, message='Counter increased in Python')
 
-    # POST means "change the value".
-    # The browser sends JSON like {"delta": 1} or {"delta": -1}.
-    data = request.get_json(silent=True) or {}
-    delta = data.get('delta', 1)
 
-    # Convert the incoming value to an integer and ignore bad input.
-    try:
-        delta = int(delta)
-    except (TypeError, ValueError):
-        delta = 0
+@app.route('/api/counter/decrease', methods=['POST'])
+def decrease_counter():
+    # We are going to update the global counter variable,
+    # so Python needs to know we mean the outer variable.
+    global count
 
-    count += delta
-
-    if delta >= 0:
-        message = 'Counter increased in Python'
-    else:
-        message = 'Counter decreased in Python'
-
-    return jsonify(count=count, message=message)
+    count -= 1
+    return jsonify(count=count, message='Counter decreased in Python')
 
 
 if __name__ == '__main__':

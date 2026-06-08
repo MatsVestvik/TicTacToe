@@ -38,4 +38,4 @@ This is a tiny example of buttons talking to a Python backend.
 6. Leave that terminal open while the backend is running.
 7. Open `Client/index.html` in your browser.
 
-Clicking `+` sends `{"delta": 1}` and clicking `-` sends `{"delta": -1}`. Python updates the count and the label changes.
+Clicking `+` calls `/api/counter/increase` and clicking `-` calls `/api/counter/decrease`. Python updates the count and the label changes.
