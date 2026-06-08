@@ -1,11 +1,12 @@
 # Backend Counter Demo
 
-This is a tiny example of a frontend button talking to a Python backend.
+This is a tiny example of a button talking to a Python backend.
 
-## Files
+## How it works
 
-- `Client/` contains the HTML, CSS, and JavaScript.
-- `backend/` contains the Flask app and the counter state.
+- The browser loads `Client/index.html`.
+- `Client/main.js` builds the tiny UI and calls the backend with `fetch()`.
+- `backend/app.py` stores the count and answers with JSON.
 
 ## Run
 
