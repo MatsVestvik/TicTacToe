@@ -1,6 +1,21 @@
 // Find the empty page area from index.html.
 const appElement = document.querySelector('#app')
 
+function getApiBaseUrl() {
+	const configuredBase = window.API_BASE_URL?.trim()
+	if (configuredBase) {
+		return configuredBase.replace(/\/$/, '')
+	}
+
+	if (window.location.protocol === 'file:') {
+		return 'http://127.0.0.1:5000'
+	}
+
+	return window.location.origin
+}
+
+const API_BASE = getApiBaseUrl()
+
 // Create the text that shows the current counter value.
 const countElement = document.createElement('h1')
 countElement.textContent = '0'
@@ -18,7 +33,6 @@ appElement.append(countElement, decreaseButton, increaseButton)
 // Ask Flask for the current count and show it.
 async function loadCount() {
 	// GET asks for the current value.
-	const API_BASE = window.API_BASE_URL || 'http://127.0.0.1:5000'
 	const response = await fetch(`${API_BASE}/api/counter`)
 	const data = await response.json()
 	countElement.textContent = String(data.count)
@@ -26,7 +40,6 @@ async function loadCount() {
 
 // Tell Flask to increase the count by 1.
 async function increaseCount() {
-	const API_BASE = window.API_BASE_URL || 'http://127.0.0.1:5000'
 	const response = await fetch(`${API_BASE}/api/counter/increase`, {
 		method: 'POST',
 	})
@@ -36,7 +49,6 @@ async function increaseCount() {
 
 // Tell Flask to decrease the count by 1.
 async function decreaseCount() {
-	const API_BASE = window.API_BASE_URL || 'http://127.0.0.1:5000'
 	const response = await fetch(`${API_BASE}/api/counter/decrease`, {
 		method: 'POST',
 	})
