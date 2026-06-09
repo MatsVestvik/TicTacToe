@@ -1,7 +1,6 @@
 import { getApiBaseUrl } from '../core/apiConfig.js'
 import { getOrCreateClientId } from '../core/clientIdentity.js'
 import { MultiplayerApi } from '../services/MultiplayerApi.js'
-import { injectStyles } from '../ui/injectStyles.js'
 import { GameView } from '../views/GameView.js'
 import { MenuView } from '../views/MenuView.js'
 import { QueueView } from '../views/QueueView.js'
@@ -51,7 +50,6 @@ export class TicTacToeApp {
 	}
 
 	start() {
-		injectStyles()
 		this.rootElement.replaceChildren(this.shell)
 		this.render()
 		this.loadMultiplayerState()
