@@ -17,57 +17,32 @@ const API_BASE = getApiBaseUrl()
 
 const styleElement = document.createElement('style')
 styleElement.textContent = `
-	:root {
-		color-scheme: dark;
-		font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-		--bg: #0b1020;
-		--panel: rgba(15, 23, 42, 0.82);
-		--panel-border: rgba(148, 163, 184, 0.24);
-		--text: #e2e8f0;
-		--muted: #94a3b8;
-		--accent: #8b5cf6;
-		--accent-strong: #c084fc;
-		--win: #22c55e;
-	}
-
 	* { box-sizing: border-box; }
 
 	body {
 		margin: 0;
-		min-height: 100vh;
-		background:
-			radial-gradient(circle at top left, rgba(139, 92, 246, 0.22), transparent 32%),
-			radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.14), transparent 28%),
-			linear-gradient(180deg, #060912 0%, var(--bg) 100%);
-		color: var(--text);
+		font-family: Arial, sans-serif;
+		line-height: 1.4;
 	}
 
 	#app {
 		min-height: 100vh;
 		display: grid;
 		place-items: center;
-		padding: 24px;
+		padding: 16px;
 	}
 
 	.app-shell {
 		width: min(100%, 560px);
-		padding: 28px;
-		border: 1px solid var(--panel-border);
-		border-radius: 28px;
-		background: var(--panel);
-		backdrop-filter: blur(16px);
-		box-shadow: 0 24px 80px rgba(2, 6, 23, 0.45);
+		padding: 8px;
 	}
 
 	h1 {
 		margin: 0 0 8px;
-		font-size: clamp(2rem, 5vw, 3.5rem);
-		letter-spacing: -0.04em;
 	}
 
 	p {
 		margin: 0;
-		color: var(--muted);
 		line-height: 1.5;
 	}
 
@@ -75,66 +50,56 @@ styleElement.textContent = `
 		display: flex;
 		flex-wrap: wrap;
 		gap: 10px;
-		margin-top: 20px;
+		margin-top: 16px;
 		align-items: center;
 	}
 
 	.player-prompt {
-		color: var(--muted);
 		margin-right: 4px;
 	}
 
 	button {
 		appearance: none;
-		border: 1px solid rgba(148, 163, 184, 0.25);
-		background: rgba(15, 23, 42, 0.88);
-		color: var(--text);
-		border-radius: 14px;
-		padding: 0.8rem 1rem;
+		border: 1px solid #999;
+		background: #fff;
+		color: #000;
+		border-radius: 4px;
+		padding: 0.6rem 0.9rem;
 		font: inherit;
 		cursor: pointer;
-		transition: transform 120ms ease, border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
-	}
-
-	button:hover:not(:disabled) {
-		transform: translateY(-1px);
-		border-color: rgba(192, 132, 252, 0.7);
-		box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.12);
 	}
 
 	button:disabled {
 		cursor: not-allowed;
-		opacity: 0.55;
+		opacity: 0.7;
 	}
 
 	button.selected {
-		border-color: rgba(192, 132, 252, 0.9);
-		background: rgba(139, 92, 246, 0.26);
+		border-color: #000;
+		font-weight: 700;
 	}
 
 	.status {
-		margin-top: 18px;
+		margin-top: 16px;
 		min-height: 1.5em;
-		color: var(--text);
 	}
 
 	.board {
-		margin-top: 18px;
+		margin-top: 16px;
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 12px;
+		gap: 8px;
 	}
 
 	.cell {
 		aspect-ratio: 1 / 1;
 		display: grid;
 		place-items: center;
-		font-size: clamp(2.4rem, 8vw, 4.5rem);
+		font-size: clamp(2rem, 8vw, 3.5rem);
 		font-weight: 700;
-		letter-spacing: -0.08em;
-		border-radius: 20px;
-		background: rgba(2, 6, 23, 0.62);
-		border: 1px solid rgba(148, 163, 184, 0.22);
+		border-radius: 0;
+		background: #fff;
+		border: 1px solid #000;
 	}
 
 	.cell:disabled {
@@ -232,7 +197,7 @@ function getWinnerMessage() {
 function render() {
 	const joinedPlayer = currentPlayer || 'not joined'
 	title.textContent = 'Tic Tac Toe'
-	subtitle.textContent = 'Two devices can join the same board. Pick a side, wait for your turn, and play against each other.'
+	subtitle.textContent = 'Two devices can join the same board.'
 	statusElement.textContent = `${getWinnerMessage()} You are ${joinedPlayer}.`
 
 	cellButtons.forEach((cellButton, index) => {
