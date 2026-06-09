@@ -195,11 +195,11 @@ export class TicTacToeApp {
 			this.isBusy = false
 			this.render()
 		}
+	}
 
-		async queueFromGame() {
-			// leave current match then re-join the queue
-			await this.leaveMultiplayer()
-			await this.joinMultiplayer()
-		}
+	async queueFromGame() {
+		// leave current match then re-join the queue
+		await this.leaveMultiplayer()
+		await this.joinMultiplayer()
 	}
 }
