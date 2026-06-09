@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, jsonify
 
 
@@ -53,6 +55,6 @@ def decrease_counter():
 
 if __name__ == '__main__':
     # Start the development server on your laptop.
-    # host='127.0.0.1' means "only this computer can reach it".
-    # port=5000 is the address the browser uses.
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    # host='0.0.0.0' lets deployment platforms reach the app.
+    # Render provides PORT automatically at runtime.
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
