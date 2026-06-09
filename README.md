@@ -2,6 +2,15 @@
 
 This is a simple tic-tac-toe game for the browser.
 
+## Frontend structure
+
+- `Client/main.js` boots the app.
+- `Client/app/` holds the main app controller.
+- `Client/core/` holds small browser utilities.
+- `Client/services/` holds API code.
+- `Client/views/` holds the menu, queue, and game screens.
+- `Client/ui/` holds shared style setup.
+
 ## Modes
 
 - Multiplayer: joins a queue until another player is matched, then both players share one board.
