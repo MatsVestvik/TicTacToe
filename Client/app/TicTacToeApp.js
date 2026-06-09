@@ -44,6 +44,8 @@ export class TicTacToeApp {
 			onMove: (index) => this.playMove(index),
 			onLeave: () => this.leaveMultiplayer(),
 			onReset: () => this.resetBoard(),
+			onHome: () => this.leaveMultiplayer(),
+			onQueue: () => this.queueFromGame(),
 		})
 
 		this.shell.append(this.title, this.subtitle, this.menuView.root, this.queueView.root, this.gameView.root)
@@ -192,6 +194,12 @@ export class TicTacToeApp {
 		} finally {
 			this.isBusy = false
 			this.render()
+		}
+
+		async queueFromGame() {
+			// leave current match then re-join the queue
+			await this.leaveMultiplayer()
+			await this.joinMultiplayer()
 		}
 	}
 }

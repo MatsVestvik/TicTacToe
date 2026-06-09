@@ -1,5 +1,5 @@
 export class GameView {
-	constructor({ onMove, onLeave, onReset }) {
+	constructor({ onMove, onLeave, onReset, onHome, onQueue }) {
 		this.onMove = onMove
 		this.root = document.createElement('section')
 		this.root.className = 'ttt-section'
@@ -9,6 +9,24 @@ export class GameView {
 
 		const buttonRow = document.createElement('div')
 		buttonRow.className = 'ttt-buttons'
+
+		this.homeButton = document.createElement('button')
+		this.homeButton.type = 'button'
+		this.homeButton.className = 'ttt-button'
+		this.homeButton.textContent = 'Home'
+		this.homeButton.addEventListener('click', onHome)
+
+		this.rematchButton = document.createElement('button')
+		this.rematchButton.type = 'button'
+		this.rematchButton.className = 'ttt-button'
+		this.rematchButton.textContent = 'Rematch'
+		this.rematchButton.addEventListener('click', onReset)
+
+		this.queueButton = document.createElement('button')
+		this.queueButton.type = 'button'
+		this.queueButton.className = 'ttt-button'
+		this.queueButton.textContent = 'Queue'
+		this.queueButton.addEventListener('click', onQueue)
 
 		this.leaveButton = document.createElement('button')
 		this.leaveButton.type = 'button'
@@ -22,7 +40,7 @@ export class GameView {
 		this.resetButton.textContent = 'Reset board'
 		this.resetButton.addEventListener('click', onReset)
 
-		buttonRow.append(this.leaveButton, this.resetButton)
+		buttonRow.append(this.homeButton, this.rematchButton, this.queueButton, this.leaveButton, this.resetButton)
 
 		this.boardElement = document.createElement('div')
 		this.boardElement.className = 'ttt-board'
@@ -57,16 +75,24 @@ export class GameView {
 		})
 
 		if (winner) {
-			this.statusElement.textContent = `Player ${winner} wins. You are ${symbol}.`
-			return
+			if (symbol === winner) {
+				this.statusElement.textContent = `You win!`
+			} else {
+				this.statusElement.textContent = `You lose.`
+			}
+		} else if (isTie) {
+			this.statusElement.textContent = `Tie game.`
+		} else {
+			this.statusElement.textContent = `You are ${symbol}. Player ${nextPlayer}'s turn.`
 		}
 
-		if (isTie) {
-			this.statusElement.textContent = `Tie game. You are ${symbol}.`
-			return
-		}
-
-		this.statusElement.textContent = `You are ${symbol}. Player ${nextPlayer}'s turn.`
+		// Show/hide rematch and queue/home controls when the game is finished
+		const finished = Boolean(winner) || Boolean(isTie)
+		this.rematchButton.disabled = !finished || isBusy
+		this.queueButton.disabled = !finished || isBusy
+		this.homeButton.disabled = isBusy
+		this.leaveButton.disabled = isBusy
+		this.resetButton.disabled = isBusy
 	}
 
 	setBusy(isBusy) {
