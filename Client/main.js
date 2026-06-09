@@ -13,16 +13,28 @@ function getApiBaseUrl() {
 	return window.location.origin
 }
 
-const API_BASE = getApiBaseUrl()
+function getOrCreateClientId() {
+	const storageKey = 'tictactoe-client-id'
+	const existingId = window.localStorage.getItem(storageKey)
+	if (existingId) {
+		return existingId
+	}
 
-const styleElement = document.createElement('style')
-styleElement.textContent = `
+	const createdId = window.crypto.randomUUID()
+	window.localStorage.setItem(storageKey, createdId)
+	return createdId
+}
+
+const API_BASE = getApiBaseUrl()
+const CLIENT_ID = getOrCreateClientId()
+
+const styles = document.createElement('style')
+styles.textContent = `
 	* { box-sizing: border-box; }
 
 	body {
 		margin: 0;
 		font-family: Arial, sans-serif;
-		line-height: 1.4;
 	}
 
 	#app {
@@ -32,206 +44,292 @@ styleElement.textContent = `
 		padding: 16px;
 	}
 
-	.app-shell {
-		width: min(100%, 560px);
-		padding: 8px;
+	.shell {
+		width: min(100%, 420px);
 	}
 
 	h1 {
-		margin: 0 0 8px;
+		margin: 0 0 12px;
 	}
 
 	p {
 		margin: 0;
-		line-height: 1.5;
+		line-height: 1.4;
 	}
 
-	.controls-row {
+	.section {
+		margin-top: 16px;
+	}
+
+	.buttons {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 10px;
-		margin-top: 16px;
-		align-items: center;
-	}
-
-	.player-prompt {
-		margin-right: 4px;
+		gap: 8px;
+		margin-top: 12px;
 	}
 
 	button {
-		appearance: none;
-		border: 1px solid #999;
+		font: inherit;
+		padding: 0.6rem 0.9rem;
+		border: 1px solid #000;
 		background: #fff;
 		color: #000;
-		border-radius: 4px;
-		padding: 0.6rem 0.9rem;
-		font: inherit;
 		cursor: pointer;
 	}
 
 	button:disabled {
 		cursor: not-allowed;
-		opacity: 0.7;
-	}
-
-	button.selected {
-		border-color: #000;
-		font-weight: 700;
-	}
-
-	.status {
-		margin-top: 16px;
-		min-height: 1.5em;
+		opacity: 0.6;
 	}
 
 	.board {
-		margin-top: 16px;
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
+		grid-template-columns: repeat(3, 1fr);
 		gap: 8px;
+		margin-top: 12px;
 	}
 
 	.cell {
 		aspect-ratio: 1 / 1;
-		display: grid;
-		place-items: center;
-		font-size: clamp(2rem, 8vw, 3.5rem);
+		font-size: 2rem;
 		font-weight: 700;
-		border-radius: 0;
-		background: #fff;
-		border: 1px solid #000;
 	}
 
-	.cell:disabled {
-		opacity: 1;
+	.hidden {
+		display: none;
 	}
 `
-document.head.append(styleElement)
+document.head.append(styles)
 
-function getSelectedPlayer() {
-	return new URLSearchParams(window.location.search).get('player')?.toUpperCase() || ''
-}
-
-function setSelectedPlayer(player) {
-	const url = new URL(window.location.href)
-	url.searchParams.set('player', player)
-	window.history.replaceState({}, '', url)
-	currentPlayer = player
-	render()
-	loadGame()
-}
-
-let currentPlayer = getSelectedPlayer()
-let gameState = {
-	board: Array(9).fill(null),
-	nextPlayer: 'X',
-	winner: null,
-	isTie: false,
-}
-let isBusy = false
-
-const appShell = document.createElement('main')
-appShell.className = 'app-shell'
+const shell = document.createElement('main')
+shell.className = 'shell'
 
 const title = document.createElement('h1')
 title.textContent = 'Tic Tac Toe'
 
 const subtitle = document.createElement('p')
-subtitle.textContent = 'Two devices can join the same board. Pick a side, wait for your turn, and play against each other.'
+subtitle.textContent = 'Choose a mode to start.'
 
-const controlsRow = document.createElement('div')
-controlsRow.className = 'controls-row'
+const menuSection = document.createElement('section')
+menuSection.className = 'section'
 
-const playerPrompt = document.createElement('span')
-playerPrompt.className = 'player-prompt'
-playerPrompt.textContent = 'Join as:'
+const menuButtons = document.createElement('div')
+menuButtons.className = 'buttons'
 
-const xButton = document.createElement('button')
-xButton.textContent = 'X'
+const multiplayerButton = document.createElement('button')
+multiplayerButton.textContent = 'Multiplayer'
 
-const oButton = document.createElement('button')
-oButton.textContent = 'O'
+const singleplayerButton = document.createElement('button')
+singleplayerButton.textContent = 'Singleplayer (coming soon)'
+singleplayerButton.disabled = true
 
-const resetButton = document.createElement('button')
-resetButton.textContent = 'Reset board'
+const localButton = document.createElement('button')
+localButton.textContent = 'Local (coming soon)'
+localButton.disabled = true
 
-const statusElement = document.createElement('p')
-statusElement.className = 'status'
+menuButtons.append(multiplayerButton, singleplayerButton, localButton)
+menuSection.append(menuButtons)
 
-const boardElement = document.createElement('div')
-boardElement.className = 'board'
+const queueSection = document.createElement('section')
+queueSection.className = 'section hidden'
+
+const queueStatus = document.createElement('p')
+const leaveQueueButton = document.createElement('button')
+leaveQueueButton.textContent = 'Leave queue'
+
+queueSection.append(queueStatus, document.createElement('div'))
+queueSection.querySelector('div').className = 'buttons'
+queueSection.querySelector('div').append(leaveQueueButton)
+
+const gameSection = document.createElement('section')
+gameSection.className = 'section hidden'
+
+const gameStatus = document.createElement('p')
+const gameButtons = document.createElement('div')
+gameButtons.className = 'buttons'
+
+const leaveGameButton = document.createElement('button')
+leaveGameButton.textContent = 'Leave match'
+
+const resetGameButton = document.createElement('button')
+resetGameButton.textContent = 'Reset board'
+
+gameButtons.append(leaveGameButton, resetGameButton)
+
+const board = document.createElement('div')
+board.className = 'board'
 
 const cellButtons = Array.from({ length: 9 }, (_, index) => {
 	const cellButton = document.createElement('button')
 	cellButton.className = 'cell'
 	cellButton.type = 'button'
-	cellButton.addEventListener('click', () => makeMove(index))
-	boardElement.append(cellButton)
+	cellButton.addEventListener('click', () => playMove(index))
+	board.append(cellButton)
 	return cellButton
 })
 
-controlsRow.append(playerPrompt, xButton, oButton, resetButton)
-appShell.append(title, subtitle, controlsRow, statusElement, boardElement)
-appElement.replaceChildren(appShell)
+gameSection.append(gameStatus, gameButtons, board)
+shell.append(title, subtitle, menuSection, queueSection, gameSection)
+appElement.replaceChildren(shell)
 
-xButton.addEventListener('click', () => setSelectedPlayer('X'))
-oButton.addEventListener('click', () => setSelectedPlayer('O'))
-resetButton.addEventListener('click', resetGame)
+let scene = 'menu'
+let multiplayerState = {
+	state: 'idle',
+	symbol: null,
+	queuePosition: null,
+	match: null,
+}
+let isBusy = false
 
-function getCellLabel(value) {
-	return value || ''
+function setScene(nextScene) {
+	scene = nextScene
+	render()
 }
 
-function getWinnerMessage() {
-	if (gameState.winner) {
-		return `Player ${gameState.winner} wins.`
+function showMenu() {
+	setScene('menu')
+}
+
+function showQueue() {
+	setScene('queue')
+}
+
+function showGame() {
+	setScene('game')
+}
+
+function renderBoard() {
+	const match = multiplayerState.match
+	const boardState = match?.board || Array(9).fill(null)
+	const nextPlayer = match?.nextPlayer || 'X'
+	const winner = match?.winner
+	const isTie = match?.isTie
+	const symbol = multiplayerState.symbol
+
+	cellButtons.forEach((cellButton, index) => {
+		const value = boardState[index]
+		cellButton.textContent = value || ''
+		cellButton.disabled = Boolean(value) || Boolean(winner) || Boolean(isTie) || symbol !== nextPlayer || isBusy
+	})
+
+	if (winner) {
+		gameStatus.textContent = `Player ${winner} wins. You are ${symbol}.`
+		return
 	}
 
-	if (gameState.isTie) {
-		return 'Game ended in a tie.'
+	if (isTie) {
+		gameStatus.textContent = `Tie game. You are ${symbol}.`
+		return
 	}
 
-	return `Player ${gameState.nextPlayer}'s turn.`
+	gameStatus.textContent = `You are ${symbol}. Player ${nextPlayer}'s turn.`
 }
 
 function render() {
-	const joinedPlayer = currentPlayer || 'not joined'
-	title.textContent = 'Tic Tac Toe'
-	subtitle.textContent = 'Two devices can join the same board.'
-	statusElement.textContent = `${getWinnerMessage()} You are ${joinedPlayer}.`
+	menuSection.classList.toggle('hidden', scene !== 'menu')
+	queueSection.classList.toggle('hidden', scene !== 'queue')
+	gameSection.classList.toggle('hidden', scene !== 'game')
 
-	cellButtons.forEach((cellButton, index) => {
-		const value = gameState.board[index]
-		cellButton.textContent = getCellLabel(value)
-		cellButton.disabled = Boolean(value) || Boolean(gameState.winner) || Boolean(gameState.isTie) || !currentPlayer || currentPlayer !== gameState.nextPlayer || isBusy
-		cellButton.setAttribute('aria-label', `Cell ${index + 1}${value ? `, ${value}` : ''}`)
-	})
+	if (scene === 'menu') {
+		subtitle.textContent = 'Choose a mode to start.'
+	}
 
-	xButton.classList.toggle('selected', currentPlayer === 'X')
-	oButton.classList.toggle('selected', currentPlayer === 'O')
-	resetButton.disabled = isBusy
-	playerPrompt.textContent = currentPlayer ? `Joined as ${currentPlayer}` : 'Join as:'
+	if (scene === 'queue') {
+		subtitle.textContent = 'Waiting to be matched with another player.'
+		queueStatus.textContent = multiplayerState.queuePosition
+			? `You are in the queue. Position ${multiplayerState.queuePosition}.`
+			: 'You are in the queue.'
+	}
+
+	if (scene === 'game') {
+		subtitle.textContent = 'Multiplayer match.'
+		renderBoard()
+	}
+
+	multiplayerButton.disabled = isBusy
+	leaveQueueButton.disabled = isBusy
+	leaveGameButton.disabled = isBusy
+	resetGameButton.disabled = isBusy
 }
 
-async function loadGame() {
+async function joinMultiplayer() {
 	isBusy = true
 	render()
 
 	try {
-		const response = await fetch(`${API_BASE}/api/game`)
+		const response = await fetch(`${API_BASE}/api/multiplayer/join`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ clientId: CLIENT_ID }),
+		})
 		const data = await response.json()
-		gameState = data
+		multiplayerState = data.status || multiplayerState
+		if (multiplayerState.state === 'matched' || multiplayerState.state === 'finished') {
+			showGame()
+		} else if (multiplayerState.state === 'queued') {
+			showQueue()
+		} else {
+			showMenu()
+		}
 	} catch (error) {
-		statusElement.textContent = 'Could not load the game state.'
+		subtitle.textContent = 'Could not join multiplayer.'
 	} finally {
 		isBusy = false
 		render()
 	}
 }
 
-async function makeMove(index) {
-	if (!currentPlayer) {
-		statusElement.textContent = 'Pick X or O first.'
+async function leaveMultiplayer() {
+	isBusy = true
+	render()
+
+	try {
+		await fetch(`${API_BASE}/api/multiplayer/leave`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ clientId: CLIENT_ID }),
+		})
+		multiplayerState = {
+			state: 'idle',
+			symbol: null,
+			queuePosition: null,
+			match: null,
+		}
+		showMenu()
+	} catch (error) {
+		subtitle.textContent = 'Could not leave the match.'
+	} finally {
+		isBusy = false
+		render()
+	}
+}
+
+async function loadMultiplayerState() {
+	try {
+		const response = await fetch(`${API_BASE}/api/multiplayer/status?clientId=${encodeURIComponent(CLIENT_ID)}`)
+		const data = await response.json()
+		multiplayerState = data.status || multiplayerState
+
+		if (multiplayerState.state === 'queued') {
+			showQueue()
+		} else if (multiplayerState.state === 'matched' || multiplayerState.state === 'finished') {
+			showGame()
+		} else {
+			showMenu()
+		}
+	} catch (error) {
+		showMenu()
+	} finally {
+		render()
+	}
+}
+
+async function playMove(index) {
+	if (!multiplayerState.symbol) {
 		return
 	}
 
@@ -239,39 +337,52 @@ async function makeMove(index) {
 	render()
 
 	try {
-		const response = await fetch(`${API_BASE}/api/game/move?player=${encodeURIComponent(currentPlayer)}&index=${index}`, {
+		const response = await fetch(`${API_BASE}/api/game/move`, {
 			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				clientId: CLIENT_ID,
+				index,
+			}),
 		})
 		const data = await response.json()
-		gameState = data.state || gameState
-		if (!response.ok && data.error) {
-			statusElement.textContent = data.error
-		}
+		multiplayerState = data.status || multiplayerState
 	} catch (error) {
-		statusElement.textContent = 'Move failed. Check the backend connection.'
+		gameStatus.textContent = 'Could not make that move.'
 	} finally {
 		isBusy = false
 		render()
 	}
 }
 
-async function resetGame() {
+async function resetBoard() {
 	isBusy = true
 	render()
 
 	try {
 		const response = await fetch(`${API_BASE}/api/game/reset`, {
 			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ clientId: CLIENT_ID }),
 		})
 		const data = await response.json()
-		gameState = data.state || gameState
+		multiplayerState = data.status || multiplayerState
 	} catch (error) {
-		statusElement.textContent = 'Reset failed. Check the backend connection.'
+		gameStatus.textContent = 'Could not reset the board.'
 	} finally {
 		isBusy = false
 		render()
 	}
 }
 
-loadGame()
-setInterval(loadGame, 2000)
+multiplayerButton.addEventListener('click', joinMultiplayer)
+leaveQueueButton.addEventListener('click', leaveMultiplayer)
+leaveGameButton.addEventListener('click', leaveMultiplayer)
+resetGameButton.addEventListener('click', resetBoard)
+
+loadMultiplayerState()
+setInterval(loadMultiplayerState, 2000)
