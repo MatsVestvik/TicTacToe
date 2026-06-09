@@ -1,60 +1,108 @@
 import os
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 
-# Import the Flask tools we need:
-# - Flask creates the web app
-# - jsonify turns Python data into JSON for the browser
-# - request tells us which HTTP method the browser used
 app = Flask(__name__)
 
-# This number lives in Python memory on the server.
-# Every browser request reads or changes this same value.
-count = 0
+board = [None] * 9
+next_player = 'X'
+winner = None
+is_tie = False
+
+
+def get_game_state():
+    return {
+        'board': board,
+        'nextPlayer': next_player,
+        'winner': winner,
+        'isTie': is_tie,
+    }
+
+
+def check_winner():
+    winning_lines = (
+        (0, 1, 2),
+        (3, 4, 5),
+        (6, 7, 8),
+        (0, 3, 6),
+        (1, 4, 7),
+        (2, 5, 8),
+        (0, 4, 8),
+        (2, 4, 6),
+    )
+
+    for first, second, third in winning_lines:
+        if board[first] and board[first] == board[second] == board[third]:
+            return board[first]
+
+    return None
 
 
 @app.after_request
 def add_cors_headers(response):
-    # This runs after every response.
-    # It adds CORS headers so the browser can call Flask
-    # even when the HTML is opened from a different origin.
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    response.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
     return response
 
 
-@app.route('/api/counter', methods=['GET'])
-def counter():
-    # GET means "read the current value".
-    # jsonify(count=count) makes this response look like:
-    # { "count": 0 }
-    return jsonify(count=count)
+@app.route('/api/game', methods=['GET'])
+def get_game():
+    return jsonify(get_game_state())
 
 
+@app.route('/api/game/move', methods=['POST'])
+def make_move():
+    global next_player, winner, is_tie
 
-@app.route('/api/counter/increase', methods=['POST'])
-def increase_counter():
-    # We are going to update the global counter variable,
-    # so Python needs to know we mean the outer variable.
-    global count
+    player = request.args.get('player', '').upper()
+    index_value = request.args.get('index', '')
 
-    count += 1
-    return jsonify(count=count, message='Counter increased in Python')
+    if player not in {'X', 'O'}:
+        return jsonify(error='player must be X or O', state=get_game_state()), 400
+
+    try:
+        index = int(index_value)
+    except (TypeError, ValueError):
+        return jsonify(error='index must be a number from 0 to 8', state=get_game_state()), 400
+
+    if index < 0 or index > 8:
+        return jsonify(error='index must be between 0 and 8', state=get_game_state()), 400
+
+    if winner or is_tie:
+        return jsonify(error='game is over', state=get_game_state()), 409
+
+    if player != next_player:
+        return jsonify(error='not your turn', state=get_game_state()), 409
+
+    if board[index] is not None:
+        return jsonify(error='cell already taken', state=get_game_state()), 409
+
+    board[index] = player
+
+    found_winner = check_winner()
+    if found_winner:
+        winner = found_winner
+    elif all(cell is not None for cell in board):
+        is_tie = True
+    else:
+        next_player = 'O' if next_player == 'X' else 'X'
+
+    return jsonify(state=get_game_state())
 
 
-@app.route('/api/counter/decrease', methods=['POST'])
-def decrease_counter():
-    # We are going to update the global counter variable,
-    # so Python needs to know we mean the outer variable.
-    global count
+@app.route('/api/game/reset', methods=['POST'])
+def reset_game():
+    global board, next_player, winner, is_tie
 
-    count -= 1
-    return jsonify(count=count, message='Counter decreased in Python')
+    board = [None] * 9
+    next_player = 'X'
+    winner = None
+    is_tie = False
+
+    return jsonify(state=get_game_state())
 
 
 if __name__ == '__main__':
-    # Start the development server on your laptop.
-    # host='0.0.0.0' lets deployment platforms reach the app.
-    # Render provides PORT automatically at runtime.
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
